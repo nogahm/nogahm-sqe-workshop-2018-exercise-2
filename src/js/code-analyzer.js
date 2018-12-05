@@ -167,7 +167,7 @@ function Literal(value)
 
 function UnaryExpression(value)
 {
-    return value.operator+''+value.argument.value;
+    return value.operator+' '+value.argument.value;
 }
 
 //find expression to string - checked - ??
@@ -177,7 +177,7 @@ function getBinaryExp(test) {
     left=binaryOneSide(left);
     right=binaryOneSide(right);
 
-    return left+''+test.operator+''+right;
+    return left+' '+test.operator+' '+right;
 }
 
 //checked - ??
@@ -185,7 +185,7 @@ function binaryOneSide(left) {
     let func = typeToHandlerMapping[left.type];
     let temp= func.call(undefined,left);
     if(left.type==('BinaryExpression'))
-        left='('+temp+')';
+        left='( '+temp+' )';
     else
         left=temp;
     return left;
@@ -193,7 +193,7 @@ function binaryOneSide(left) {
 
 function MemberExpression(value)
 {
-    return value.object.name+'['+getValue(value.property)+']';
+    return value.object.name+' [ '+getValue(value.property)+' ] ';
 }
 
 function initiateMap() {
@@ -245,7 +245,7 @@ function handleUpdate(body) {
         'Type':'update expression',
         'Name':name,
         'Condition':'',
-        'Value':name+''+operator
+        'Value':name+' '+operator
     });
 
 }
