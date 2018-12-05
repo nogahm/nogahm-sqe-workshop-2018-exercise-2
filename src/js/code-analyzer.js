@@ -1,4 +1,5 @@
 import * as esprima from 'esprima';
+import {functionAfterSubs} from "./symbolicSubstitution";
 let parseInfo=[];
 let line=1;
 let typeToHandlerMapping=new Map();
@@ -10,6 +11,7 @@ const parseCode = (codeToParse) => {
     let ans=esprima.parseScript(codeToParse);
     initiateMap();
     return ans;
+
 };
 
 export {parseCode};

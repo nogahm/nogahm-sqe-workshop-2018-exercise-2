@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
+import {functionAfterSubs} from "./symbolicSubstitution";
 
 
 $(document).ready(function () {
@@ -10,6 +11,8 @@ $(document).ready(function () {
         $('#parsedCode').val(JSON.stringify(parsedCode, null, 2));
 
         createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse);
+
         addToTable();
     });
 
