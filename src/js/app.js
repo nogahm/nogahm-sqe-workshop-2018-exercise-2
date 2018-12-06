@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
-import {functionAfterSubs} from "./symbolicSubstitution";
+import {functionAfterSubs,newLines} from "./symbolicSubstitution";
+
 
 
 $(document).ready(function () {
@@ -12,11 +13,19 @@ $(document).ready(function () {
 
         createParseInfo(parsedCode);
         functionAfterSubs(codeToParse);
-
+        showFuncAfterSubs();
         addToTable();
     });
 
 });
+
+function showFuncAfterSubs() {
+    let ans="";
+    for(let i=0;i<newLines.length;i++)
+        ans+=newLines[i]+"\n";
+    $('#parsedCode').val(ans);
+}
+
 
 function addToTable() {
     let table = document.getElementById('resultsTable');

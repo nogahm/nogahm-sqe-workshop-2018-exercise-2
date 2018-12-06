@@ -1,6 +1,6 @@
 import {parseInfo} from "./code-analyzer";
 import * as esprima from "esprima";
-let localVars=new Map();
+
 let argsVars=new Map();
 let newLines=[];
 let oldLines=[];
@@ -13,8 +13,8 @@ function functionAfterSubs(codeToParse) {
     initiateMap();
     saveFuncArgs();
     oldLines=codeToParse.split("\n");
-    substitute(codeToParse);
-    newLines;
+    substitute(new Map());
+
     alert('aaaaaaaa');
 };
 
@@ -35,6 +35,7 @@ function initiateMap() {
     typeToHandlerMapping['MemberExpression']=MemberExpression;
 }
 export {functionAfterSubs};
+export {newLines};
 
 //extract from parseInfo all function args
 function saveFuncArgs() {
@@ -47,30 +48,66 @@ function saveFuncArgs() {
     }
 }
 
-//go throw code lines and substitute
-function substitute() {
-    while(oldLinesCounter<oldLines.length){
+
+function substituteBlock(localVars,endOfScopeLine) {
+    while(oldLinesCounter<=endOfScopeLine)
+    {
         let temp=oldLines[oldLinesCounter];
-        if((oldLines[oldLinesCounter]=="}") || (oldLines[oldLinesCounter]=="{") || !(temp.replace(/\s/g, '').length)){//if line not in table
+        temp=temp.replace(/\s/g, '');
+        if((temp=="}") || (temp=="{") || !(temp.length)){//if line not in table
             newLines[newLineCounter]=oldLines[oldLinesCounter];
             newLineCounter++;
             oldLinesCounter++;
         }
         else{
-            handleTableLine();
+            handleTableLine(localVars);
+        }
+        if(oldLinesCounter<=endOfScopeLine && oldLines[oldLinesCounter].includes("{")){
+            substitute(localVars);
+        }else {
+            let x;
         }
     }
 }
 
+//go throw code lines and substitute
+function substitute(localVars) {
+    while(oldLinesCounter<oldLines.length){
+        let newlocalVars=new Map(localVars);
+        let endOfScopeLine=findEndOfScopeLine();
+        substituteBlock(newlocalVars,endOfScopeLine);
+    }
+}
+//start from oldLinesCounter - find end of scope by { }
+function findEndOfScopeLine() {
+    let openCount=0;
+    for(let i=oldLinesCounter;i<oldLines.length;i++){
+        if(oldLines[i].includes("{"))
+            openCount++;
+        else
+            openCount=openCount;
+        if(oldLines[i].includes("}"))
+            openCount--;
+        else
+            openCount=openCount;
+        if(openCount==0)
+            return i;
+        else
+            openCount=openCount;
+    }
+    return oldLines.length-1;
+}
+
+
 //given a "line" in table - check if needed to substitute/add to locals/ad as is to newLines
-function handleTableLine() {
+function handleTableLine(localVars) {
     if(tableLinesCounter==1) //function header
-        copyAsIs();
+        copyAsIs(localVars);
     else {
         let currTableLines=getLinesFromParseInfo();
         for (let i=0;i<currTableLines.length;i++){
             let func = typeToHandlerMapping[currTableLines[i].Type];
-            let xxx=func.call(undefined, currTableLines[i]);
+            let xxx=func.call(undefined, currTableLines[i],localVars);
             if(currTableLines[i].Type!='variable declaration' && currTableLines[i].Type!='assignment expression'){
                 newLines[newLineCounter]=xxx;
                 newLineCounter++;
@@ -83,23 +120,26 @@ function handleTableLine() {
 
 
 //not adding to newLines - only save vars
-function varDeclaration(currItem) {
-    let newVal = checkForLocals(currItem.Value);
+function varDeclaration(currItem,localVars) {
+    let newVal = checkForLocals(currItem.Value,localVars);
     localVars.set((currItem.Name), newVal);
 }
 
-function varAssignment(currItem) {
+function varAssignment(currItem,localVars) {
     if(argsVars.has(currItem.Name)){//is global
-        argsVars.set(currItem.Name,currItem.Value);
+        let newVal=checkForLocals(currItem.Value,localVars);
+        argsVars.set(currItem.Name,newVal);
+        newLines[newLineCounter]="let "+currItem.Name+"="+newVal+";";
+        newLineCounter++;
     }else{//local var
-        let newVal=checkForLocals(currItem.Value);
+        let newVal=checkForLocals(currItem.Value,localVars);
         localVars.set(currItem.Name,newVal);
     }
 }
 
 //while or if or if else
-function condition(currItem) {
-    let newCondition = checkForLocals(currItem.Condition);
+function condition(currItem,localVars) {
+    let newCondition = checkForLocals(currItem.Condition,localVars);
     let oldLine=oldLines[oldLinesCounter];
     let newLine=oldLine.replace(/ *\([^)]*\) */g, "("+newCondition+")");
     return newLine;
@@ -107,31 +147,31 @@ function condition(currItem) {
     // newLineCounter++;
 }
 
-function returnStatement(value)
+function returnStatement(value,localVars)
 {
-    return 'return ' + checkForLocals(value.Value);
+    return "return" + checkForLocals(value.Value,localVars)+";";
 }
 
-function checkForLocals(Value) {
+function checkForLocals(Value,localVars) {
     if(Value=="null(or nothing)")
         return;
     else {
         let x = esprima.parseScript(Value+'');
         let func = typeToHandlerMapping[(x.body)[0].expression.type];//what king of expression
-        return func.call(undefined, (x.body)[0].expression);
+        return func.call(undefined, (x.body)[0].expression,localVars);
     }
 }
 
-function BinaryExpression(expression)
+function BinaryExpression(expression,localVars)
 {
     let left=expression.left;
     let right=expression.right;
-    left=binaryOneSide(left);
-    right=binaryOneSide(right);
+    left=binaryOneSide(left,localVars);
+    right=binaryOneSide(right,localVars);
     //calculate if possible
     let res=calculate(left,right,expression.operator);
     if(res==null)
-        return left+' '+expression.operator+' '+right;
+        return "("+left+' '+expression.operator+' '+right+")";
     else
         return res;
 }
@@ -157,18 +197,18 @@ function calculate(left, right, operator) {
     }
 }
 
-function binaryOneSide(left) {
+function binaryOneSide(left,localVars) {
     let func = typeToHandlerMapping[left.type];
-    let temp= func.call(undefined,left);
+    let temp= func.call(undefined,left,localVars);
     if(left.type==('BinaryExpression'))
-        left='( '+temp+' )';
+        left="( "+temp+" )";
     else
         left=temp;
     return left;
 }
 
 //var
-function Identifier(value)
+function Identifier(value,localVars)
 {
     if(localVars.has(value.name))
         return localVars.get(value.name);
@@ -176,23 +216,23 @@ function Identifier(value)
         return value.name;
 }
 
-function Literal(value)
+function Literal(value,localVars)
 {
     return value.value;
 }
 
-function UnaryExpression(value)
+function UnaryExpression(value,localVars)
 {
     let func = typeToHandlerMapping[value.argument.type];
-    let newVal= func.call(undefined,value.argument);
+    let newVal= func.call(undefined,value.argument,localVars);
     return value.operator+' '+newVal;
 }
 
-function MemberExpression(value)
+function MemberExpression(value,localVars)
 {
     let ans='';
     let func = typeToHandlerMapping[value.property.type];
-    let indexVal= func.call(undefined,value.property);
+    let indexVal= func.call(undefined,value.property,localVars);
     if(localVars.has(value.object.name))
         ans+= localVars.get(value.object.name);
     else
@@ -201,7 +241,7 @@ function MemberExpression(value)
 }
 
 //copy from old to new as is (by counters)
-function copyAsIs() {
+function copyAsIs(localVars) {
     newLines[newLineCounter]=oldLines[oldLinesCounter];
     newLineCounter++;
 }
