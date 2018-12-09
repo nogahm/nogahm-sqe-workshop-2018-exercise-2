@@ -1,4 +1,4 @@
-import {parseInfo} from "./code-analyzer";
+import {parseInfo,globals} from "./code-analyzer";
 import * as esprima from "esprima";
 
 let argsVars=new Map();
@@ -9,12 +9,12 @@ let oldLinesCounter=0;
 let tableLinesCounter=1;
 let typeToHandlerMapping=new Map();
 let typeToHandlerMappingColor=new Map();
-let colors=[];
+let colors=new Map();
 
-function functionAfterSubs(codeToParse) {
+function functionAfterSubs(codeToParse,input) {
     initiateMap();
     initiateMapColor();
-    saveFuncArgs();
+    saveFuncArgs(input);
     codeToParse=codeToParse.replace(new RegExp("}", 'g'),"}\n");
     oldLines=codeToParse.split("\n");
     substitute(new Map());
@@ -37,19 +37,25 @@ function initiateMap() {
     typeToHandlerMapping['Literal']=Literal;
     typeToHandlerMapping['UnaryExpression']=UnaryExpression;
     typeToHandlerMapping['MemberExpression']=MemberExpression;
+    typeToHandlerMapping['ArrayExpression']=ArrayExpression;
 }
-export {functionAfterSubs};
+export {functionAfterSubs,colors};
 export {newLines};
 
 //extract from parseInfo all function args
-function saveFuncArgs() {
+function saveFuncArgs(input) {
+    let temp=0;
+    let vars=input.split(",");
     for(let i=1;i<parseInfo.length;i++)
     {
         if(parseInfo[i].Line>1)
             return;
-        else
-            argsVars.set(parseInfo[i].Name, null);
+        else{
+            argsVars.set(parseInfo[i].Name, vars[temp]);
+            temp++;
+        }
     }
+
 }
 
 
@@ -258,11 +264,22 @@ function MemberExpression(value,localVars)
     let ans='';
     let func = typeToHandlerMapping[value.property.type];
     let indexVal= func.call(undefined,value.property,localVars);
+    if(argsVars.has(indexVal))
+        indexVal=argsVars.get(indexVal);
     if(localVars.has(value.object.name))
-        ans+= localVars.get(value.object.name);
+        return localVars.get(value.object.name)[indexVal];
     else
-        ans+= value.object.name;
-    return ans+' [ '+indexVal+' ] ';
+        return value.object.name+' [ '+indexVal+' ] ';
+}
+
+function ArrayExpression(value,localVars)
+{
+    let ans=[];
+    for(let i=0;i<value.elements.length;i++){
+        let func = typeToHandlerMapping[value.elements[i].type];
+        ans[i]= func.call(undefined,value.elements[i],localVars);
+    }
+    return ans;
 }
 
 //copy from old to new as is (by counters)
@@ -299,7 +316,7 @@ function findColor(condition) {
     let x = esprima.parseScript(condition+'');
     let func = typeToHandlerMappingColor[(x.body)[0].expression.type];//what king of expression
     let ans= func.call(undefined, (x.body)[0].expression);
-    colors.push({"line":newLineCounter,"Color":ans});
+    colors.set(newLineCounter,ans);
 }
 
 function initiateMapColor() {

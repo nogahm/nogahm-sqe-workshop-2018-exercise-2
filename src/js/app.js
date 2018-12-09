@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
-import {functionAfterSubs,newLines} from "./symbolicSubstitution";
+import {functionAfterSubs,newLines,colors} from "./symbolicSubstitution";
 
 
 
@@ -10,9 +10,9 @@ $(document).ready(function () {
         let codeToParse = $('#codePlaceholder').val();
         let parsedCode = parseCode(codeToParse);
         $('#parsedCode').val(JSON.stringify(parsedCode, null, 2));
-
+        let input=$('#varsPlaceholder').val();
         createParseInfo(parsedCode);
-        functionAfterSubs(codeToParse);
+        functionAfterSubs(codeToParse,input);
         showFuncAfterSubs();
         addToTable();
     });
@@ -20,10 +20,22 @@ $(document).ready(function () {
 });
 
 function showFuncAfterSubs() {
-    let ans="";
-    for(let i=0;i<newLines.length;i++)
-        ans+=newLines[i]+"\n";
-    $('#parsedCode').val(ans);
+
+    let table = document.getElementById('subsFuncTable');
+
+    for(let i=0;i<newLines.length;i++){
+        var row = table.insertRow(i);
+        var line = row.insertCell(0);
+        line.innerHTML=newLines[i];
+        if(colors.has(i))
+        {
+            if(colors.get(i))
+                line.className="green";
+            else
+                line.className="red";
+        }
+
+    }
 }
 
 

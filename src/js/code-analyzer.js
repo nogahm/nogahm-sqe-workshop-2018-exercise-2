@@ -3,19 +3,43 @@ import {functionAfterSubs} from "./symbolicSubstitution";
 let parseInfo=[];
 let line=1;
 let typeToHandlerMapping=new Map();
+let globals;
 
 const parseCode = (codeToParse) => {
     parseInfo=[];
     line=1;
-
+    codeToParse=saveGlobals(codeToParse);
     let ans=esprima.parseScript(codeToParse);
     initiateMap();
+
     return ans;
 
 };
 
+function saveGlobals(codeToParse) {
+    let lines=codeToParse.split("\n");
+    globals="";
+    let ans="";
+    let i=0;
+    while(i<lines.length && !lines[i].includes("(")) {
+        globals+=lines[i];
+        i++;
+    }
+    let j=lines.length-1;
+    while(j>=0 && !lines[j].includes("}")) {
+        globals+=lines[j];
+        j--;
+    }
+    for(let x=0;x<lines.length;x++){
+        if(x>=i&&x<=j)
+            ans+=lines[x];
+    }
+    return ans;
+}
+
+
 export {parseCode};
-export {parseInfo};
+export {parseInfo,globals};
 export {createParseInfo};
 export {functionCode};
 
@@ -170,6 +194,15 @@ function UnaryExpression(value)
     return value.operator+' '+value.argument.value;
 }
 
+function ArrayExpression(value)
+{
+    let ans="[";
+    for(let i=0;i<value.elements.length;i++){
+        ans+=getValue(value.elements[i])+",";
+    }
+    return ans.substring(0,ans.length-1)+"]";
+}
+
 //find expression to string - checked - ??
 function getBinaryExp(test) {
     let left=test.left;
@@ -212,6 +245,7 @@ function initiateMap() {
     typeToHandlerMapping['Literal']=Literal;
     typeToHandlerMapping['UnaryExpression']=UnaryExpression;
     typeToHandlerMapping['MemberExpression']=MemberExpression;
+    typeToHandlerMapping['ArrayExpression']=ArrayExpression;
 }
 
 //assignment - checked
