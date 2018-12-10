@@ -21,21 +21,20 @@ $(document).ready(function () {
 
 function showFuncAfterSubs() {
 
-    let table = document.getElementById('subsFuncTable');
-
+    let htmlObject = document.getElementById('subsFunc');
+    let func='';
     for(let i=0;i<newLines.length;i++){
-        var row = table.insertRow(i);
-        var line = row.insertCell(0);
-        line.innerHTML=newLines[i];
         if(colors.has(i))
         {
             if(colors.get(i))
-                line.className="green";
+                func+='<span>'+'<mark style="background-color: green">'+newLines[i]+'</mark>'+'</span>'+'<br>';
             else
-                line.className="red";
+                func+='<span>'+'<mark style="background-color: red">'+newLines[i]+'</mark>'+'</span>'+'<br>';
         }
-
+        else
+            func+='<span>'+newLines[i]+'\n'+'</span>'+'<br>';
     }
+    htmlObject.innerHTML=func;
 }
 
 

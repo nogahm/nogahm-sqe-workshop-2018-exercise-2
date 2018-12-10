@@ -399,7 +399,7 @@ function BinaryExpressionC(expression)
     //calculate if possible
     let res=calculate(left,right,expression.operator);
     let func = operatorsMap[expression.operator];
-    if(res==null && func!=null) {
+    if(res==null && func!=undefined) {
         return func.call(undefined,left,right);}
     else
         return res;
