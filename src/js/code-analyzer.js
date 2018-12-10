@@ -1,15 +1,15 @@
 import * as esprima from 'esprima';
-import {functionAfterSubs} from "./symbolicSubstitution";
+// import {functionAfterSubs} from "./symbolicSubstitution";
 let parseInfo=[];
 let line=1;
 let typeToHandlerMapping=new Map();
-let globals;
-
+let globals=[];
+let functionCodeOnly;
 const parseCode = (codeToParse) => {
     parseInfo=[];
     line=1;
-    codeToParse=saveGlobals(codeToParse);
-    let ans=esprima.parseScript(codeToParse);
+    functionCodeOnly=saveGlobals(codeToParse);
+    let ans=esprima.parseScript(functionCodeOnly);
     initiateMap();
 
     return ans;
@@ -17,29 +17,33 @@ const parseCode = (codeToParse) => {
 };
 
 function saveGlobals(codeToParse) {
-    let lines=codeToParse.split("\n");
-    globals="";
-    let ans="";
+    let lines=codeToParse.split('\n');
+    globals=[];
     let i=0;
-    while(i<lines.length && !lines[i].includes("(")) {
-        globals+=lines[i];
-        i++;
-    }
+    let index=0;
+    while(i<lines.length && !lines[i].includes('(')) {
+        globals[index]=lines[i];
+        index++;
+        i++;}
     let j=lines.length-1;
-    while(j>=0 && !lines[j].includes("}")) {
-        globals+=lines[j];
-        j--;
-    }
+    while(j>=0 && !lines[j].includes('}')) {
+        globals[index]=lines[j];
+        index++;
+        j--;}
+    return getFunctionOnly(lines, i, j);
+}
+
+function getFunctionOnly(lines, i, j){
+    let ans='';
     for(let x=0;x<lines.length;x++){
         if(x>=i&&x<=j)
-            ans+=lines[x];
+            ans+=lines[x]+'\n';
     }
     return ans;
 }
 
-
 export {parseCode};
-export {parseInfo,globals};
+export {parseInfo,globals,functionCodeOnly};
 export {createParseInfo};
 export {functionCode};
 
@@ -186,7 +190,7 @@ function Identifier(value)
 
 function Literal(value)
 {
-    return value.value;
+    return value.raw;
 }
 
 function UnaryExpression(value)
@@ -196,11 +200,11 @@ function UnaryExpression(value)
 
 function ArrayExpression(value)
 {
-    let ans="[";
+    let ans='[';
     for(let i=0;i<value.elements.length;i++){
-        ans+=getValue(value.elements[i])+",";
+        ans+=getValue(value.elements[i])+',';
     }
-    return ans.substring(0,ans.length-1)+"]";
+    return ans.substring(0,ans.length-1)+']';
 }
 
 //find expression to string - checked - ??
