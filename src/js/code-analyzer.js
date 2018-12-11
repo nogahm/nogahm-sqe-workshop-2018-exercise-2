@@ -105,7 +105,8 @@ function handleReturn(body) {
 
 //checked
 function handleIf(body,type) {
-    let condition=getBinaryExp(body.test);
+    let func = typeToHandlerMapping[body.test.type];
+    let condition=func.call(undefined,body.test);
     if(type == null)
         type='if statement';
     parseInfo.push({
@@ -116,7 +117,6 @@ function handleIf(body,type) {
         'Value':''
     });
     line++;
-    //body
     let consequents=body.consequent;
     if(consequents.type=='BlockStatement')
         functionCode(consequents.body);

@@ -14,6 +14,7 @@ let typeToHandlerMappingColor=new Map();
 let colors=new Map();
 
 function functionAfterSubs(codeToParse,input) {
+    initiate();
     initiateMap();
     initiateMapColor();
     saveFuncArgs(input);
@@ -25,6 +26,19 @@ function functionAfterSubs(codeToParse,input) {
     alert('aaaaaaaa');
 }
 
+function initiate() {
+    argsVars=new Map();
+    newLines=[];
+    oldLines=[];
+    newLineCounter=0;
+    oldLinesCounter=0;
+    tableLinesCounter=1;
+    typeToHandlerMapping=new Map();
+    mathOperatorsMap=new Map();
+    operatorsMap=new Map();
+    typeToHandlerMappingColor=new Map();
+    colors=new Map();
+}
 function initiateMap() {
     typeToHandlerMapping=new Map();
     typeToHandlerMapping['variable declaration']=varDeclaration;
@@ -51,15 +65,43 @@ export {newLines};
 //extract from parseInfo all function args
 function saveFuncArgs(input) {
     let temp=0;
+    input=input.replace(/\s/g, '');
     let vars=input.split(',');
-    for(let i=1;i<parseInfo.length;i++)
-    {
-        if(parseInfo[i].Line>1)
-            return;
-        else{
-            argsVars.set(parseInfo[i].Name, vars[temp]);
+    for(let i=1;i<parseInfo.length;i++) {
+        if(parseInfo[i].Line>1) return;
+        if(vars[temp].charAt(0)=='['){//check for array
+            let arr=[];
+            arr[0]=vars[temp].substring(1);
+            let index=1;
             temp++;
-        }
+            findAllArr(temp,vars,arr,index);
+            arr[index]=returnValue(vars[temp].slice(0, -1));
+            temp++;
+            index++;
+            argsVars.set(parseInfo[i].Name, arr);}
+        else{
+            argsVars.set(parseInfo[i].Name, returnValue(vars[temp]));
+            temp++;}}
+}
+
+function returnValue(var1) {
+    if(var1=='true' || var1=='false')
+        return JSON.parse(var1);
+    else if(isString(var1))
+        return var1.slice(1,-1);
+    else
+        return var1;
+}
+
+function isString(var1){
+    return (var1.charAt(0)=='\'' && var1.charAt(var1.length-1)=='\'') || (var1.charAt(0)=='"' && var1.charAt(var1.length-1)=='"');
+}
+
+function findAllArr(temp,vars,arr,index){
+    while(temp<vars.length && !(vars[temp].charAt(vars[temp].length-1)==']')){
+        arr[index]=returnValue(vars[temp]);
+        temp++;
+        index++;
     }
 }
 
@@ -306,7 +348,7 @@ function Identifier(value,localVars)
 
 function Literal(value,localVars)
 {
-    return value.value;
+    return value.raw;
 }
 
 function UnaryExpression(value,localVars)
