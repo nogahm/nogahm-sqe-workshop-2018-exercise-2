@@ -362,6 +362,8 @@ function MemberExpression(value,localVars)
 {
     let func = typeToHandlerMapping[value.property.type];
     let indexVal= func.call(undefined,value.property,localVars);
+    if(indexVal=='length')
+        return value.object.name+'.length';
     if(argsVars.has(indexVal))
         indexVal=argsVars.get(indexVal);
     if(localVars.has(value.object.name))
@@ -502,9 +504,16 @@ function UnaryExpressionC(value)
 function MemberExpressionC(value)
 {
     let func = typeToHandlerMappingColor[value.property.type];
-    let indexVal= func.call(undefined,value.property);
-    if(argsVars.has(value.object.name))
-        return (argsVars.get(value.object.name))[indexVal];
+    let indexVal=value.property.name;
+    if(indexVal==undefined || !indexVal=='length')
+        indexVal= func.call(undefined,value.property);
+
+    if(argsVars.has(value.object.name)) {
+        if (indexVal == 'length')
+            return (argsVars.get(value.object.name)).length;
+        else
+            return (argsVars.get(value.object.name))[indexVal];
+    }
     else
         return null;
 }
