@@ -329,18 +329,20 @@ function calculate(left, right, operator) {
 function plus(leftNum,rightNum,left,right) {
     if(leftNum==0)
         return right;
-    if(rightNum==0)
+    else if(rightNum==0)
         return left;
-    if((isNaN(leftNum) || isNaN(rightNum)))
+    else if((isNaN(leftNum) || isNaN(rightNum)))
         return null;
-    return leftNum+rightNum;
+    else
+        return leftNum+rightNum;
 }
 function minus(leftNum,rightNum,left,right) {
     if(rightNum==0 && right!=null)
         return left;
-    if((isNaN(leftNum) || isNaN(rightNum)))
+    else if((isNaN(leftNum) || isNaN(rightNum)))
         return null;
-    return leftNum-rightNum;
+    else
+        return leftNum-rightNum;
 }
 function multi(leftNum,rightNum,left,right) {
     if(!(isNaN(leftNum)) && !(isNaN(rightNum)) &&(left!=null && right!=null))

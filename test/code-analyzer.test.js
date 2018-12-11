@@ -190,7 +190,7 @@ describe('save info and create table',()=>{
         let code= 'function x(){\n' +
             'let x=1+2;\n' +
             '}';
-        let vars='2,1';
+        let vars='';
         let temp=parseCode(code);
         createParseInfo(temp);
         functionAfterSubs(temp,vars);
@@ -199,6 +199,36 @@ describe('save info and create table',()=>{
             ans+=newLines[i]+'\n';
         }
         assert.deepEqual(ans,'function x(){\n' +
+            '}\n');
+    });
+
+    it('zeros and not computable-all operators', ()=>{
+        let code= 'function x(a,b){\n' +
+            'let x=0+a;\n' +
+            'x=a+0;\n'+
+            'x=0+a;\n'+
+            'x=a+b;\n'+
+            'x=a-0;\n'+
+            'x=a-b;\n'+
+            'x=3-2;\n'+
+            'x=2*3;\n'+
+            'x=a*3;\n'+
+            'x=2*a;\n'+
+            'x=b*a;\n'+
+            'x=2/3;\n'+
+            'x=a/3;\n'+
+            'x=2/a;\n'+
+            'x=b/a;\n'+
+            '}';
+        let vars='2,9';
+        let temp=parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp,vars);
+        let ans='';
+        for(let i=0;i<newLines.length;i++){
+            ans+=newLines[i]+'\n';
+        }
+        assert.deepEqual(ans,'function x(a,b){\n' +
             '}\n');
     });
 });
