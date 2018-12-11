@@ -207,6 +207,7 @@ function ArrayExpression(value)
     return ans.substring(0,ans.length-1)+']';
 }
 
+
 //find expression to string - checked - ??
 function getBinaryExp(test) {
     let left=test.left;
@@ -250,7 +251,10 @@ function initiateMap() {
     typeToHandlerMapping['UnaryExpression']=UnaryExpression;
     typeToHandlerMapping['MemberExpression']=MemberExpression;
     typeToHandlerMapping['ArrayExpression']=ArrayExpression;
+    typeToHandlerMapping['LogicalExpression']=getBinaryExp;
 }
+
+
 
 //assignment - checked
 function handleExpression(body) {

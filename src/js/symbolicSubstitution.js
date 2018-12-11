@@ -22,8 +22,7 @@ function functionAfterSubs(codeToParse,input) {
     let temp=functionCodeOnly.replace(new RegExp('}', 'g'),'}\n');
     oldLines=temp.split('\n');
     substitute(new Map());
-
-    alert('aaaaaaaa');
+    // alert('aaaaaaaa');
 }
 
 function initiate() {
@@ -40,8 +39,7 @@ function initiate() {
     colors=new Map();
 }
 function initiateMap() {
-    typeToHandlerMapping=new Map();
-    typeToHandlerMapping['variable declaration']=varDeclaration;
+    typeToHandlerMapping=new Map(); typeToHandlerMapping['variable declaration']=varDeclaration;
     typeToHandlerMapping['assignment expression']=varAssignment;
     typeToHandlerMapping['While Statement']=condition;
     typeToHandlerMapping['if statement']=condition;
@@ -49,6 +47,7 @@ function initiateMap() {
     typeToHandlerMapping['else statement']=copyAsIs;
     typeToHandlerMapping['return statement']=returnStatement;
     typeToHandlerMapping['BinaryExpression']=BinaryExpression;//expressions
+    typeToHandlerMapping['LogicalExpression']=BinaryExpression;//expressions
     typeToHandlerMapping['Identifier']=Identifier;
     typeToHandlerMapping['Literal']=Literal;
     typeToHandlerMapping['UnaryExpression']=UnaryExpression;
@@ -62,6 +61,13 @@ function initiateMap() {
 export {functionAfterSubs,colors};
 export {newLines};
 
+function checkIfOnlyOneInArray(var1) {
+    if(var1.charAt(0)=='[' && var1.charAt(var1.length-1)==']')
+        return true;
+    else
+        return false;
+}
+
 //extract from parseInfo all function args
 function saveFuncArgs(input) {
     let temp=0;
@@ -70,14 +76,14 @@ function saveFuncArgs(input) {
     for(let i=1;i<parseInfo.length;i++) {
         if(parseInfo[i].Line>1) return;
         if(vars[temp].charAt(0)=='['){//check for array
+            checkIfOnlyOneInArray(vars[temp]);
             let arr=[];
-            arr[0]=vars[temp].substring(1);
-            let index=1;
-            temp++;
-            findAllArr(temp,vars,arr,index);
-            arr[index]=returnValue(vars[temp].slice(0, -1));
-            temp++;
-            index++;
+            let index=0; //arr index
+            // temp++; //vars index
+            index=findAllArr(temp,vars,arr,index);
+            // arr[index]=returnValue(vars[temp].slice(0, -1));
+            // temp++;
+            // index++;
             argsVars.set(parseInfo[i].Name, arr);}
         else{
             argsVars.set(parseInfo[i].Name, returnValue(vars[temp]));
@@ -97,12 +103,34 @@ function isString(var1){
     return (var1.charAt(0)=='\'' && var1.charAt(var1.length-1)=='\'') || (var1.charAt(0)=='"' && var1.charAt(var1.length-1)=='"');
 }
 
-function findAllArr(temp,vars,arr,index){
-    while(temp<vars.length && !(vars[temp].charAt(vars[temp].length-1)==']')){
-        arr[index]=returnValue(vars[temp]);
-        temp++;
-        index++;
+function handleCurrArr(temp, vars, arr, index) {
+    while(temp<vars.length){
+        if((vars[temp].charAt(0)=='[')){
+            arr[index]=returnValue(vars[temp].substring(1));
+            temp++;
+            index++;
+        } else if(vars[temp].charAt(vars[temp].length-1)==']'){
+            arr[index]=returnValue(vars[temp].slice(0,-1));
+            temp++;
+            index++;
+            return index;
+        }
+        else{
+            arr[index]=returnValue(vars[temp]);
+            temp++;
+            index++;
+        }
     }
+}
+
+function findAllArr(temp,vars,arr,index){
+    //start
+    if(checkIfOnlyOneInArray(vars[temp]))
+        arr[index]=returnValue(vars[temp].slice(1,-1));
+    else {
+        index=handleCurrArr(temp,vars,arr,index);
+    }
+    return index;
 }
 
 //go throw globals
@@ -194,7 +222,7 @@ function getTabs() {
             return oldLines[oldLinesCounter].substring(0,i);
         }
     }
-    return '';
+    // return '';
 }
 
 //given a "line" in table - check if needed to substitute/add to locals/ad as is to newLines
@@ -308,20 +336,20 @@ function plus(leftNum,rightNum,left,right) {
     return leftNum+rightNum;
 }
 function minus(leftNum,rightNum,left,right) {
-    if(rightNum==0)
+    if(rightNum==0 && right!=null)
         return left;
     if((isNaN(leftNum) || isNaN(rightNum)))
         return null;
     return leftNum-rightNum;
 }
 function multi(leftNum,rightNum,left,right) {
-    if(!(isNaN(leftNum)) && !(isNaN(rightNum)))
+    if(!(isNaN(leftNum)) && !(isNaN(rightNum)) &&(left!=null && right!=null))
         return leftNum*rightNum;
     else
         return null;
 }
 function divide(leftNum,rightNum,left,right) {
-    if(!(isNaN(leftNum) && isNaN(rightNum)))
+    if(!(isNaN(leftNum) && isNaN(rightNum)) &&(left!=null && right!=null))
         return leftNum/rightNum;
     else
         return null;
@@ -348,7 +376,10 @@ function Identifier(value,localVars)
 
 function Literal(value,localVars)
 {
-    return value.raw;
+    if(localVars==null)
+        return value.raw;
+    else
+        return value.raw;
 }
 
 function UnaryExpression(value,localVars)
@@ -385,7 +416,7 @@ function ArrayExpression(value,localVars)
 //copy from old to new as is (by counters)
 function copyAsIs(localVars) {
     let temp=oldLines[oldLinesCounter];
-    if(!temp.replace(/\s/g, '').length)
+    if(!temp.replace(/\s/g, '').length && localVars!=null)
         return;
     else {
         newLines[newLineCounter]=oldLines[oldLinesCounter];
@@ -420,6 +451,7 @@ function initiateMapColor() {
     typeToHandlerMappingColor=new Map();
     //expressions
     typeToHandlerMappingColor['BinaryExpression']=BinaryExpressionC;
+    typeToHandlerMappingColor['LogicalExpression']=BinaryExpressionC;
     typeToHandlerMappingColor['Identifier']=IdentifierC;
     typeToHandlerMappingColor['Literal']=LiteralC;
     typeToHandlerMappingColor['UnaryExpression']=UnaryExpressionC;

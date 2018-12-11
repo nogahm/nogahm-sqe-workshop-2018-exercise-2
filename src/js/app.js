@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
-import {functionAfterSubs,newLines,colors} from "./symbolicSubstitution";
+import {functionAfterSubs,newLines,colors} from './symbolicSubstitution';
 
 
 
@@ -14,7 +14,7 @@ $(document).ready(function () {
         createParseInfo(parsedCode);
         functionAfterSubs(codeToParse,input);
         showFuncAfterSubs();
-        addToTable();
+        // addToTable();
     });
 
 });
