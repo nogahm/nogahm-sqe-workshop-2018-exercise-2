@@ -84,6 +84,7 @@ function saveFuncArgs(input) {
             // arr[index]=returnValue(vars[temp].slice(0, -1));
             // temp++;
             // index++;
+            temp+=index;
             argsVars.set(parseInfo[i].Name, arr);}
         else{
             argsVars.set(parseInfo[i].Name, returnValue(vars[temp]));
@@ -121,6 +122,7 @@ function handleCurrArr(temp, vars, arr, index) {
             index++;
         }
     }
+    return index;
 }
 
 function findAllArr(temp,vars,arr,index){
@@ -397,9 +399,9 @@ function MemberExpression(value,localVars)
     let indexVal= func.call(undefined,value.property,localVars);
     if(indexVal=='length')
         return value.object.name+'.length';
-    if(argsVars.has(indexVal))
+    else if(argsVars.has(indexVal))
         indexVal=argsVars.get(indexVal);
-    if(localVars.has(value.object.name))
+    else if(localVars.has(value.object.name))
         return localVars.get(value.object.name)[indexVal];
     else
         return value.object.name+' [ '+indexVal+' ] ';

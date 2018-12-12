@@ -114,10 +114,10 @@ describe('save info and create table',()=>{
             '}\n' +
             '}\n');
     });
-    it('arg array three item-string', ()=>{
+    it('arg array three item-string and unary exp', ()=>{
         let code= 'function x(a){\n' +
             'if(a[0]==\'a\'){\n' +
-            'return true;\n' +
+            'return -1;\n' +
             '}\n' +
             '}';
         let vars='["a",1,true]';
@@ -130,7 +130,7 @@ describe('save info and create table',()=>{
         }
         assert.deepEqual(ans,'function x(a){\n' +
             'if(a [ 0 ]  == \'a\'){\n' +
-            'return true;\n' +
+            'return - 1;\n' +
             '}\n' +
             '}\n');
     });
@@ -229,6 +229,45 @@ describe('save info and create table',()=>{
             ans+=newLines[i]+'\n';
         }
         assert.deepEqual(ans,'function x(a,b){\n' +
+            '}\n');
+    });
+
+    it('array.length', ()=>{
+        let code= 'function x(a){\n' +
+            'if(a.length==3){\n' +
+            'return \'a\';\n' +
+            '}\n' +
+            '}';
+        let vars='["a",1,true]';
+        let temp=parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp,vars);
+        let ans='';
+        for(let i=0;i<newLines.length;i++){
+            ans+=newLines[i]+'\n';
+        }
+        assert.deepEqual(ans,'function x(a){\n' +
+            'if(a.length == 3){\n' +
+            'return \'a\';\n' +
+            '}\n' +
+            '}\n');
+    });
+
+    it('arg index and local index', ()=>{
+        let code= 'function x(a,b){\n' +
+            'let c=1;'+
+            'a[c]=a[b];'+
+            '}';
+        let vars='["a",1,true],0';
+        let temp=parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp,vars);
+        let ans='';
+        for(let i=0;i<newLines.length;i++){
+            ans+=newLines[i]+'\n';
+        }
+        assert.deepEqual(ans,'function x(a,b){\n' +
+            'a[1]=a[b];\n'+
             '}\n');
     });
 });
