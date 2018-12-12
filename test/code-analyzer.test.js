@@ -255,10 +255,12 @@ describe('save info and create table',()=>{
 
     it('arg index and local index', ()=>{
         let code= 'function x(a,b){\n' +
-            'let c=1;'+
-            'a[c]=a[b];'+
+            'let c=0;\n' +
+            'a[c]=a[b];\n' +
+            'if(a[c]==3)\n' +
+            'return true;\n' +
             '}';
-        let vars='["a",1,true],0';
+        let vars='[1,2,3],2';
         let temp=parseCode(code);
         createParseInfo(temp);
         functionAfterSubs(temp,vars);
@@ -267,7 +269,45 @@ describe('save info and create table',()=>{
             ans+=newLines[i]+'\n';
         }
         assert.deepEqual(ans,'function x(a,b){\n' +
-            'a[1]=a[b];\n'+
+            'a [ 0 ] =3;\n' +
+            'if(a [ 0 ]  == 3)\n' +
+            'return true;\n' +
+            '}\n');
+    });
+
+    it('local arr assignment', ()=>{
+        let code= 'function x(a,b){\n' +
+            'let c=[1,2,3];\n' +
+            'c[a]=c[b];\n' +
+            '}';
+        let vars='0,2';
+        let temp=parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp,vars);
+        let ans='';
+        for(let i=0;i<newLines.length;i++){
+            ans+=newLines[i]+'\n';
+        }
+        assert.deepEqual(ans,'function x(a,b){\n' +
+            '}\n');
+    });
+
+    it('calculate result in if', ()=>{
+        let code= 'function x(a){\n' +
+            'if(a==3-3)\n' +
+            'return true;\n' +
+            '}';
+        let vars='0';
+        let temp=parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp,vars);
+        let ans='';
+        for(let i=0;i<newLines.length;i++){
+            ans+=newLines[i]+'\n';
+        }
+        assert.deepEqual(ans,'function x(a){\n' +
+            'if(a == 0)\n' +
+            'return true;\n'+
             '}\n');
     });
 });

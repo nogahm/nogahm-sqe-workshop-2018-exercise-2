@@ -79,7 +79,6 @@ function saveFuncArgs(input) {
             checkIfOnlyOneInArray(vars[temp]);
             let arr=[];
             let index=0; //arr index
-            // temp++; //vars index
             index=findAllArr(temp,vars,arr,index);
             // arr[index]=returnValue(vars[temp].slice(0, -1));
             // temp++;
@@ -257,14 +256,37 @@ function varDeclaration(currItem,localVars) {
     localVars.set((currItem.Name), newVal);
 }
 
+function findExplicitVal(Value) {
+    let x = esprima.parseScript(Value+'');
+    let func = typeToHandlerMappingColor[(x.body)[0].expression.type];//what king of expression
+    let ans= func.call(undefined, (x.body)[0].expression);
+    return ans;
+}
+
+function handleArrAssignment(x,localVars,newVal) {
+    let arrName=x.object.name;
+    let index=checkForLocals(x.property.name, localVars);
+    index=findExplicitVal(index);
+    newVal=findExplicitVal(newVal);
+    if(argsVars.has(arrName)){//global array
+        argsVars.get(arrName)[index]=newVal;
+        newLines[newLineCounter] = getTabs() + arrName+' [ '+index+' ] ' + '=' + newVal + ';';
+        newLineCounter++;
+    } else {//local array
+        localVars.get(arrName)[index]= newVal;}
+}
+
 function varAssignment(currItem,localVars) {
-    if (argsVars.has(currItem.Name)) {//is global
-        let newVal = checkForLocals(currItem.Value, localVars);
+    let newVal = checkForLocals(currItem.Value, localVars);
+    let x=esprima.parseScript(currItem.Name+'').body[0].expression;//left
+    if(x.type=='MemberExpression'){//array
+        handleArrAssignment(x,localVars,newVal);
+    }
+    else if (argsVars.has(currItem.Name)) {//is global
         argsVars.set(currItem.Name, newVal);
         newLines[newLineCounter] = getTabs() + currItem.Name + '=' + newVal + ';';
         newLineCounter++;
     } else {//local var
-        let newVal = checkForLocals(currItem.Value, localVars);
         localVars.set(currItem.Name, newVal);
     }
 }
@@ -401,7 +423,7 @@ function MemberExpression(value,localVars)
         return value.object.name+'.length';
     else if(argsVars.has(indexVal))
         indexVal=argsVars.get(indexVal);
-    else if(localVars.has(value.object.name))
+    if(localVars.has(value.object.name))
         return localVars.get(value.object.name)[indexVal];
     else
         return value.object.name+' [ '+indexVal+' ] ';
