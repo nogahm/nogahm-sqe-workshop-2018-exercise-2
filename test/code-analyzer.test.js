@@ -76,9 +76,10 @@ describe('save info and create table',()=>{
             'function x(){\n' +
             'let b=0;\n' +
             'if(a[b]){\n' +
-            'return "a";\n' +
+            '\treturn "a";\n' +
+            '\n'+
             '}\n' +
-            '}';
+            '}'+'\n   ';
         let vars='';
         let temp=parseCode(code);
         createParseInfo(temp);
@@ -89,7 +90,7 @@ describe('save info and create table',()=>{
         }
         assert.deepEqual(ans,'function x(){\n' +
             'if(a [ 0 ] ){\n' +
-            'return "a";\n' +
+            '\treturn "a";\n' +
             '}\n' +
             '}\n');
     });
@@ -294,7 +295,7 @@ describe('save info and create table',()=>{
 
     it('calculate result in if', ()=>{
         let code= 'function x(a){\n' +
-            'if(a==3-3)\n' +
+            'if(a==(3-a))\n' +
             'return true;\n' +
             '}';
         let vars='0';
@@ -306,8 +307,128 @@ describe('save info and create table',()=>{
             ans+=newLines[i]+'\n';
         }
         assert.deepEqual(ans,'function x(a){\n' +
-            'if(a == 0)\n' +
+            'if(a == 3 - a)\n' +
             'return true;\n'+
+            '}\n');
+    });
+
+    it('all operators in calc', ()=> {
+        let code = 'function x(a, b){\n' +
+            'if(a< b)\n' +
+            'return 1;\n' +
+            'else if(a>b)\n' +
+            'return 1;\n' +
+            'else if(a<=b)\n' +
+            'return 1;\n' +
+            'else if((a>=b) || (a!=b))\n' +
+            'return 1;\n' +
+            '}';
+        let vars = '0,1';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function x(a, b){\n' +
+            'if(a < b)\n' +
+            'return 1;\n' +
+            'else if(a > b)\n' +
+            'return 1;\n' +
+            'else if(a <= b)\n' +
+            'return 1;\n' +
+            'else if(a >= b || a != b)\n' +
+            'return 1;\n' +
+            '}\n');
+    });
+
+    it('unary arg', ()=> {
+        let code = 'function x(a){\n' +
+            'if(-a<0)\n' +
+            'return 1;\n' +
+            '}';
+        let vars = '1';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function x(a){\n' +
+            'if(- a < 0)\n' +
+            'return 1;\n' +
+            '}\n');
+    });
+
+    it('else', ()=> {
+        let code = 'function x(a){\n' +
+            'if(-a<0)\n' +
+            'return 1;\n' +
+            'else\n'+
+            'return 0;\n'+
+            '}';
+        let vars = '1';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function x(a){\n' +
+            'if(- a < 0)\n' +
+            'return 1;\n' +
+            'else\n'+
+            'return 0;\n'+
+            '}\n');
+    });
+
+
+    it('else in block', ()=> {
+        let code = 'function x(a){\n' +
+            'if(-a<0)\n' +
+            'return 1;\n' +
+            'else{\n'+
+            'return 0;\n'+
+            '}\n'+
+            '}';
+        let vars = '1';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function x(a){\n' +
+            'if(- a < 0)\n' +
+            'return 1;\n' +
+            'else{\n'+
+            'return 0;\n'+
+            '}\n'+
+            '}\n');
+    });
+
+    it('while', ()=> {
+        let code = 'function x(a){\n' +
+            'while(-a<0){\n' +
+            'a=a+1;\n' +
+            '}\n'+
+            '}';
+        let vars = '1';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function x(a){\n' +
+            'while(- a < 0){\n' +
+            'a=a + 1;\n' +
+            '}\n'+
             '}\n');
     });
 });

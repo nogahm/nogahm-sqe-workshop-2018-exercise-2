@@ -195,7 +195,7 @@ function Literal(value)
 
 function UnaryExpression(value)
 {
-    return value.operator+' '+value.argument.value;
+    return value.operator+' '+getValue(value.argument);
 }
 
 function ArrayExpression(value)
@@ -241,7 +241,7 @@ function initiateMap() {
     typeToHandlerMapping['IfStatement']=handleIf;
     typeToHandlerMapping['ReturnStatement']=handleReturn;
     typeToHandlerMapping['WhileStatement']=handleWhile;
-    typeToHandlerMapping['ForStatement']=handleFor;
+    // typeToHandlerMapping['ForStatement']=handleFor;
     typeToHandlerMapping['AssignmentExpression']=handleAss;
     typeToHandlerMapping['UpdateExpression']=handleUpdate;
 
@@ -313,18 +313,18 @@ function handleVarDec(body) {
 }
 
 //checked
-function handleFor(body) {
-    //for head
-    let condition=body.init.declarations[0].id.name+'='+getValue(body.init.declarations[0].init);
-    condition=condition+';'+getBinaryExp(body.test)+';'+body.update.argument.name+body.update.operator;
-    parseInfo.push({
-        'Line':line,
-        'Type':'for statement',
-        'Name':'',
-        'Condition':condition,
-        'Value':''
-    });
-    line++;
-    functionCode(body.body.body);
-
-}
+// function handleFor(body) {
+//     //for head
+//     let condition=body.init.declarations[0].id.name+'='+getValue(body.init.declarations[0].init);
+//     condition=condition+';'+getBinaryExp(body.test)+';'+body.update.argument.name+body.update.operator;
+//     parseInfo.push({
+//         'Line':line,
+//         'Type':'for statement',
+//         'Name':'',
+//         'Condition':condition,
+//         'Value':''
+//     });
+//     line++;
+//     functionCode(body.body.body);
+//
+// }

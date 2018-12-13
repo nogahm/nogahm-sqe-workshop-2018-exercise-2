@@ -121,7 +121,7 @@ function handleCurrArr(temp, vars, arr, index) {
             index++;
         }
     }
-    return index;
+    // return index;
 }
 
 function findAllArr(temp,vars,arr,index){
@@ -138,8 +138,8 @@ function findAllArr(temp,vars,arr,index){
 function saveGlobals() {
     for(let i=0;i<globals.length;i++){
         let temp=globals[i].replace(/\s/g, '');
-        if(!temp.length)
-            continue;
+        // if(!temp.length)
+        //     continue;
         let x = esprima.parseScript(globals[i]+'');
         if(x.body.length>0 &&(x.body)[0].type=='VariableDeclaration'){
             let name=(x.body)[0].declarations[0].id;
@@ -147,6 +147,8 @@ function saveGlobals() {
             let value = func.call(undefined, (x.body)[0].declarations[0].init);
             argsVars.set(name.name,value);
         }
+        else
+            continue;
     }
 }
 
@@ -222,8 +224,9 @@ function getTabs() {
         if(oldLines[oldLinesCounter].charAt(i)!='\t' && oldLines[oldLinesCounter].charAt(i)!=' '){
             return oldLines[oldLinesCounter].substring(0,i);
         }
+        else
+            continue;
     }
-    // return '';
 }
 
 //given a "line" in table - check if needed to substitute/add to locals/ad as is to newLines
@@ -295,7 +298,8 @@ function varAssignment(currItem,localVars) {
 function condition(currItem,localVars) {
     let newCondition = checkForLocals(currItem.Condition,localVars);
     let oldLine=oldLines[oldLinesCounter];
-    let newLine=oldLine.replace(/ *\([^)]*\) */g, '('+newCondition+')');
+    // let newLine=oldLine.replace(/ *\([^)]*\) */, '('+newCondition+')');
+    let newLine=oldLine.substring(0,oldLine.indexOf('(')+1)+newCondition+oldLine.substring(oldLine.lastIndexOf(')'),oldLine.length);
     if(currItem.Type=='if statement' || currItem.Type=='else if statement'){
         findColor(newCondition);
     }
@@ -541,10 +545,10 @@ function binaryOneSideC(left) {
 //var
 function IdentifierC(value)
 {
-    if(argsVars.has(value.name))
-        return argsVars.get(value.name);
-    else
-        return null;
+    // if(argsVars.has(value.name))
+    return argsVars.get(value.name);
+    // else
+    //     return null;
 }
 
 function LiteralC(value)
@@ -556,7 +560,7 @@ function UnaryExpressionC(value)
 {
     let func = typeToHandlerMappingColor[value.argument.type];
     let newVal= func.call(undefined,value.argument);
-    return calculate('1',newVal,value.operator);
+    return calculate('0',newVal,value.operator);
 }
 
 function MemberExpressionC(value)
@@ -566,12 +570,12 @@ function MemberExpressionC(value)
     if(indexVal==undefined || !indexVal=='length')
         indexVal= func.call(undefined,value.property);
 
-    if(argsVars.has(value.object.name)) {
-        if (indexVal == 'length')
-            return (argsVars.get(value.object.name)).length;
-        else
-            return (argsVars.get(value.object.name))[indexVal];
-    }
+    // if(argsVars.has(value.object.name)) {
+    if (indexVal == 'length')
+        return (argsVars.get(value.object.name)).length;
     else
-        return null;
+        return (argsVars.get(value.object.name))[indexVal];
+    // }
+    // else
+    //     return null;
 }
