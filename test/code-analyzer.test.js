@@ -431,6 +431,46 @@ describe('save info and create table',()=>{
             '}\n'+
             '}\n');
     });
+
+    it('not', ()=> {
+        let code = 'function foo(x){\n' +
+            'if(!x)\n' +
+            'return x;\n' +
+            '}';
+        let vars = 'true';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function foo(x){\n' +
+            'if(! x)\n' +
+            'return x;\n' +
+            '}\n');
+    });
+
+    it('update arg', ()=> {
+        let code = 'function foo(x){\n' +
+            'x++;\n' +
+            'if(x==0)\n' +
+            'return x;\n' +
+            '}';
+        let vars = '0';
+        let temp = parseCode(code);
+        createParseInfo(temp);
+        functionAfterSubs(temp, vars);
+        let ans = '';
+        for (let i = 0; i < newLines.length; i++) {
+            ans += newLines[i] + '\n';
+        }
+        assert.deepEqual(ans, 'function foo(x){\n' +
+            'x=x + 1;\n' +
+            'if(x == 0)\n' +
+            'return x;\n' +
+            '}\n');
+    });
 });
 
 
